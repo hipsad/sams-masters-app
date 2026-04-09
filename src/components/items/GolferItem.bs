@@ -1,0 +1,31 @@
+sub init()
+  m.bg = m.top.findNode("bg")
+  m.portraitMask = m.top.findNode("portraitMask")
+  m.portrait = m.top.findNode("portrait")
+  m.gradient = m.top.findNode("gradient")
+  m.name = m.top.findNode("name")
+  m.score = m.top.findNode("score")
+  m.position = m.top.findNode("position")
+end sub
+
+sub itemContentChanged()
+  data = m.top.itemContent
+  if data = invalid then return
+  w = m.top.width
+  h = m.top.height
+  m.bg.update({ width: w, height: h })
+  m.portraitMask.translation = [(w - 100) / 2, 30]
+  m.gradient.update({
+    width: w
+    height: h / 2
+    translation: [0, h / 2]
+  })
+  m.name.update({ width: w, translation: [0, 148] })
+  m.score.update({ width: w, translation: [0, 180] })
+  m.position.update({ width: w, translation: [0, 222] })
+  m.portrait.uri = `https://images.masters.com/players/2026/240x240/${data.id}.jpg`
+  m.name.text = data.title ?? ""
+  m.score.text = data.shortDescriptionLine1 ?? ""
+  m.position.text = data.shortDescriptionLine2 ?? ""
+  m.score.color = m.score.text.startsWith("-") ? "#cd2b2bff" : "#fce300"
+end sub

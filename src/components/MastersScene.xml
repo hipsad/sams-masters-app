@@ -67,6 +67,10 @@
                         visible="false"
                         translation="[1620, 650]"
                         />
+      <SimpleButton id="golferButton"
+                    text="My Golfers"
+                    translation="[1150, 50]"
+                    ></SimpleButton>
       <SimpleButton id="settingsButton"
                     text="Settings"
                     translation="[1500, 50]"
@@ -74,6 +78,9 @@
       <Settings id="settings"
                 visible="false"
                 ></Settings>
+      <PinnedGolfersManager id="golferManager"
+                            visible="false"
+                            />
     </Group>
   </children>
 

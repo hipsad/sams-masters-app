@@ -1,0 +1,48 @@
+<component name="PinnedGolfersManager"
+           extends="Group"
+           >
+  <interface>
+    <field id="scores"
+           type="assocarray"
+           onChange="onScores"
+           />
+    <field id="pinChanged"
+           type="boolean"
+           />
+  </interface>
+  <children>
+    <Rectangle width="1920"
+               height="1080"
+               color="#ffffff"
+               opacity="0.96"
+               />
+    <SimpleLabel text="My Golfers"
+                 translation="[100, 50]"
+                 color="#138A60"
+                 fontSize="56"
+                 fontName="nimbus"
+                 fontWeight="bold"
+                 />
+    <SimpleLabel text="Press OK to pin or unpin a player. Press BACK to close."
+                 translation="[100, 118]"
+                 color="#1C1E1F"
+                 fontSize="22"
+                 opacity="0.6"
+                 />
+    <Rectangle translation="[100, 158]"
+               width="1720"
+               height="2"
+               color="#138A60"
+               opacity="0.35"
+               />
+    <MarkupList id="playerList"
+                translation="[100, 172]"
+                itemSize="[1720, 56]"
+                itemSpacing="[0, 2]"
+                numRows="14"
+                drawFocusFeedback="false"
+                vertFocusAnimationStyle="fixedFocusWrap"
+                itemComponentName="PlayerPickerItem"
+                />
+  </children>
+</component>
