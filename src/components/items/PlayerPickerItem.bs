@@ -1,0 +1,26 @@
+function init()
+  m.focusBg = m.top.findNode("focusBg")
+  m.position = m.top.findNode("position")
+  m.name = m.top.findNode("name")
+  m.score = m.top.findNode("score")
+  m.pinned = m.top.findNode("pinned")
+end function
+
+function onItemContent()
+  data = m.top.itemContent
+  if data <> invalid then
+    m.position.text = data.shortDescriptionLine2 ?? ""
+    m.name.text = data.title ?? ""
+    m.score.text = data.shortDescriptionLine1 ?? ""
+    m.pinned.text = data.pinned = true ? "★ Pinned" : ""
+  end if
+end function
+
+function onFocusPercent()
+  percent = m.top.listHasFocus ? m.top.focusPercent : 0
+  m.focusBg.opacity = percent * 0.3
+  m.name.color = percent > 0.5 ? "#ffffff" : "#1C1E1F"
+  m.score.color = percent > 0.5 ? "#fce300" : "#1C1E1F"
+  m.position.color = percent > 0.5 ? "#ffffff" : "#138A60"
+  m.pinned.color = percent > 0.5 ? "#fce300" : "#138A60"
+end function

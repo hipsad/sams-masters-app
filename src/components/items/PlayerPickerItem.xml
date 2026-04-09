@@ -1,0 +1,83 @@
+<component name="PlayerPickerItem"
+           extends="Group"
+           >
+  <interface>
+    <field id="itemContent"
+           type="node"
+           onChange="onItemContent"
+           />
+    <field id="width"
+           type="float"
+           />
+    <field id="height"
+           type="float"
+           />
+    <field id="focusPercent"
+           type="float"
+           onChange="onFocusPercent"
+           />
+    <field id="listHasFocus"
+           type="boolean"
+           onChange="onFocusPercent"
+           />
+  </interface>
+  <children>
+    <Rectangle id="focusBg"
+               width="1720"
+               height="56"
+               color="#138A60"
+               opacity="0"
+               />
+    <LayoutGroup layoutDirection="horiz">
+      <Rectangle width="10"
+                 height="56"
+                 />
+      <SimpleLabel id="position"
+                   width="70"
+                   horizAlign="right"
+                   vertAlign="center"
+                   color="#138A60"
+                   fontSize="24"
+                   fontWeight="bold"
+                   height="56"
+                   />
+      <Rectangle width="16"
+                 height="56"
+                 />
+      <SimpleLabel id="name"
+                   width="500"
+                   vertAlign="center"
+                   color="#1C1E1F"
+                   fontSize="24"
+                   fontWeight="bold"
+                   height="56"
+                   />
+      <SimpleLabel id="score"
+                   width="80"
+                   horizAlign="center"
+                   vertAlign="center"
+                   color="#1C1E1F"
+                   fontSize="24"
+                   fontWeight="bold"
+                   height="56"
+                   />
+      <Rectangle width="20"
+                 height="56"
+                 />
+      <SimpleLabel id="pinned"
+                   width="140"
+                   vertAlign="center"
+                   color="#138A60"
+                   fontSize="22"
+                   fontWeight="bold"
+                   height="56"
+                   />
+    </LayoutGroup>
+    <Rectangle translation="[0, 54]"
+               width="1720"
+               height="2"
+               color="#1C1E1F"
+               opacity="0.08"
+               />
+  </children>
+</component>

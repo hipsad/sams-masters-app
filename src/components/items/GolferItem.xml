@@ -1,0 +1,52 @@
+<component name="GolferItem"
+           extends="Group"
+           >
+  <interface>
+    <field id="itemContent"
+           type="node"
+           onChange="itemContentChanged"
+           />
+    <field id="width"
+           type="float"
+           />
+    <field id="height"
+           type="float"
+           />
+  </interface>
+  <children>
+    <Rectangle id="bg"
+               color="#173A26"
+               />
+    <MaskGroup id="portraitMask"
+               maskSize="[100, 100]"
+               maskUri="pkg:/images/circle-mask.png"
+               >
+      <Poster id="portrait"
+              width="100"
+              height="100"
+              loadDisplayMode="scaleToZoom"
+              />
+    </MaskGroup>
+    <Poster id="gradient"
+            uri="pkg:/images/gradient.png"
+            loadDisplayMode="scaleToFill"
+            />
+    <SimpleLabel id="name"
+                 horizAlign="center"
+                 color="#EFEFEF"
+                 fontSize="22"
+                 fontWeight="bold"
+                 />
+    <SimpleLabel id="score"
+                 horizAlign="center"
+                 color="#fce300"
+                 fontSize="32"
+                 fontWeight="bold"
+                 />
+    <SimpleLabel id="position"
+                 horizAlign="center"
+                 color="#EFEFEFcc"
+                 fontSize="20"
+                 />
+  </children>
+</component>

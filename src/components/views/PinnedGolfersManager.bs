@@ -1,0 +1,76 @@
+function init()
+  m.playerList = m.top.findNode("playerList")
+  m.top.observeFieldScoped("focusedChild", "onFocusedChild")
+end function
+
+function onFocusedChild()
+  if m.top.isInFocusChain() then
+    m.playerList.setFocus(true)
+  end if
+end function
+
+function onScores()
+  scores = m.top.scores
+  if scores <> invalid and scores.data <> invalid then
+    pinnedIds = readPinnedIds()
+    content = createObject("roSGNode", "ContentNode")
+    for each player in scores.data.player
+      node = createObject("roSGNode", "ContentNode")
+      node.id = player.id.toStr()
+      node.title = player.display_name
+      node.shortDescriptionLine1 = player.topar
+      node.shortDescriptionLine2 = player.pos.replace("T", "")
+      node.addFields({
+        pinned: pinnedIds.doesExist(player.id.toStr())
+      })
+      content.appendChild(node)
+    end for
+    m.playerList.content = content
+  end if
+end function
+
+function onKeyEvent(key, press) as boolean
+  if press and key = "OK" then
+    togglePin()
+    return true
+  end if
+  return false
+end function
+
+function togglePin()
+  item = m.playerList.content?.getChild(m.playerList.itemFocused)
+  if item <> invalid then
+    pinnedIds = readPinnedIds()
+    idStr = item.id.toStr()
+    if pinnedIds.doesExist(idStr) then
+      pinnedIds.delete(idStr)
+    else
+      pinnedIds.addReplace(idStr, true)
+    end if
+    writePinnedIds(pinnedIds)
+    item.pinned = not item.pinned
+    m.top.pinChanged = not m.top.pinChanged
+  end if
+end function
+
+function readPinnedIds() as object
+  raw = createObject("roRegistrySection", "PinnedGolfers").read("ids")
+  result = {}
+  if raw <> invalid and raw <> "" then
+    for each id in raw.split(",")
+      id = id.trim()
+      if id <> "" then
+        result.addReplace(id, true)
+      end if
+    end for
+  end if
+  return result
+end function
+
+function writePinnedIds(idsMap as object)
+  ids = []
+  for each id in idsMap
+    ids.push(id)
+  end for
+  createObject("roRegistrySection", "PinnedGolfers").write("ids", ids.join(","))
+end function

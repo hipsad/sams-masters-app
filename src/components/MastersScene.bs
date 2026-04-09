@@ -4,6 +4,8 @@ function init()
   m.app = m.top.findNode("app")
   m.hint = m.top.findNode("hint")
   m.settings = m.top.findNode("settings")
+  m.golferManager = m.top.findNode("golferManager")
+  m.golferButton = m.top.findNode("golferButton")
 
   m.livefeeds = m.top.findNode("livefeeds")
   m.settingsButton = m.top.findNode("settingsButton")
@@ -19,6 +21,8 @@ function init()
   m.video.timedMetaDataSelectionKeys = ["*"]
   ' m.video.observeFieldScoped("timedMetaData2", "onVideoEvent")
   m.settingsButton.observeFieldScoped("selected", "onSettingsButtonSelected")
+  m.golferButton.observeFieldScoped("selected", "onGolferButtonSelected")
+  m.golferManager.observeFieldScoped("pinChanged", "onPinChanged")
 
   m.button = m.top.findNode("button")
   m.video.trickplayBar.update({
@@ -31,6 +35,9 @@ function init()
   m.api@.getLiveStreams().observeFieldScoped("resolve", "onLiveStreams")
   m.api@.getScores().observeFieldScoped("resolve", "onScores")
   m.root = createObject("roSGNode", "ContentNode")
+  m.pinnedRow = createObject("roSGNode", "ContentNode")
+  m.pinnedRow.title = "My Golfers"
+  m.root.appendChild(m.pinnedRow)
   m.video.observeFieldScoped("", "onVideoEvent")
   m.hintTimer = createObject("roSGNode", "Timer")
   m.hintTimer.update({
@@ -120,9 +127,14 @@ function onScores(event) as void
     m.leaderboard.visible = false
     return
   end if
+  m.lastScores = scores
   m.leaderboard.scores = scores
   m.videoLeaderboard.scores = scores
   m.leaderboard.visible = true
+  updatePinnedRow()
+  if m.golferManager.visible then
+    m.golferManager.scores = scores
+  end if
 end function
 
 function onTimerFire()
@@ -145,9 +157,10 @@ end function
 
 function onUpdateLiveStreams(event)
   row = parseLiveStreams(event)
+  liveStreamsRow = m.livefeeds.content.getChild(1)
   for i = 0 to row.getChildCount() - 1
     item = row.getChild(i)
-    for each child in m.livefeeds.content.getChild(0).getChildren(-1, 0)
+    for each child in liveStreamsRow.getChildren(-1, 0)
       if child.id = item.id then
         fields = item.getFields()
         fields.delete("change")
@@ -157,7 +170,7 @@ function onUpdateLiveStreams(event)
         exit for
       end if
     end for
-    m.livefeeds.content.getChild(0).insertChild(found, i)
+    liveStreamsRow.insertChild(found, i)
   end for
   ' reorderLiveStreams()
 end function
@@ -165,7 +178,7 @@ end function
 function reorderLiveStreams()
   live = []
   notlive = []
-  row = m.livefeeds.content.getChild(0)
+  row = m.livefeeds.content.getChild(1)
   broadcast = invalid
   for each item in row.getChildren(-1, 0)
     if item.active = true then
@@ -267,6 +280,15 @@ function onVideoVault(event)
   end for
 
   m.livefeeds.content = m.root
+  rowCount = m.root.getChildCount()
+  components = ["GolferItem"]
+  sizes = [[300, 360]]
+  for i = 1 to rowCount - 1
+    components.push("SimpleItem")
+    sizes.push([640, 360])
+  end for
+  m.livefeeds.rowItemComponentName = components
+  m.livefeeds.rowItemSize = sizes
   m.livefeeds.setFocus(true)
   m.livefeeds.observeFieldScoped("rowItemSelected", "onRowItemSelected")
 end function
@@ -276,7 +298,9 @@ function onRowItemSelected(event)
   index = event.getData()
   m.video.content = invalid
   content = m.livefeeds.content.getChild(index[0]).getChild(index[1]).clone(false)
-  if content.live = true then
+  if content.isGolfer = true then
+    playBestStream()
+  else if content.live = true then
     m.api@.getManifest(content).observeFieldScoped("resolve", "onManifest")
   else
     m.video.content = content
@@ -312,6 +336,74 @@ function onManifest(event)
   onButtonSelected()
 end function
 
+function onGolferButtonSelected()
+  if m.lastScores <> invalid then
+    m.golferManager.scores = m.lastScores
+  end if
+  m.golferManager.visible = true
+  m.golferManager.setFocus(true)
+end function
+
+function onPinChanged()
+  updatePinnedRow()
+end function
+
+function updatePinnedRow()
+  if m.lastScores <> invalid then
+    pinnedIds = readPinnedIds()
+    m.pinnedRow.removeChildrenIndex(-1, 0)
+    for i = 0 to pinnedIds.count() - 1
+      for each player in m.lastScores.data.player
+        if player.id.toStr() = pinnedIds[i] then
+          node = createObject("roSGNode", "ContentNode")
+          node.id = pinnedIds[i]
+          node.title = player.display_name
+          node.shortDescriptionLine1 = player.topar
+          node.shortDescriptionLine2 = player.pos.replace("T", "")
+          node.addFields({ isGolfer: true })
+          m.pinnedRow.appendChild(node)
+          exit for
+        end if
+      end for
+    end for
+  end if
+end function
+
+function playBestStream()
+  if m.root.getChildCount() >= 2 then
+    liveRow = m.root.getChild(1)
+    streamToPlay = invalid
+    for each stream in liveRow.getChildren(-1, 0)
+      if stream.id = "simul" and stream.active = true then
+        streamToPlay = stream
+        exit for
+      end if
+    end for
+    if streamToPlay = invalid then
+      for each stream in liveRow.getChildren(-1, 0)
+        if stream.active = true then
+          streamToPlay = stream
+          exit for
+        end if
+      end for
+    end if
+    if streamToPlay <> invalid then
+      m.api@.getManifest(streamToPlay.clone(false)).observeFieldScoped("resolve", "onManifest")
+    end if
+  end if
+end function
+
+function readPinnedIds() as object
+  raw = createObject("roRegistrySection", "PinnedGolfers").read("ids")
+  if raw = invalid or raw = "" then return []
+  result = []
+  for each id in raw.split(",")
+    id = id.trim()
+    if id <> "" then result.push(id)
+  end for
+  return result
+end function
+
 function onKeyEvent(key, press) as boolean
   if press then
     if key = "options" then
@@ -321,7 +413,7 @@ function onKeyEvent(key, press) as boolean
     end if
     if key = "up" then
       if m.button.isInFocusChain() then
-        m.settingsButton.setFocus(true)
+        m.golferButton.setFocus(true)
         return true
       end if
       if m.livefeeds.isInFocusChain() then
@@ -329,13 +421,33 @@ function onKeyEvent(key, press) as boolean
           m.button.setFocus(true)
           return true
         else
-          m.settingsButton.setFocus(true)
+          m.golferButton.setFocus(true)
           return true
         end if
       end if
     end if
+    if key = "right" then
+      if m.golferButton.isInFocusChain() then
+        m.settingsButton.setFocus(true)
+        return true
+      end if
+    end if
+    if key = "left" then
+      if m.settingsButton.isInFocusChain() then
+        m.golferButton.setFocus(true)
+        return true
+      end if
+    end if
     if key = "down" then
       if m.button.isInFocusChain() then
+        m.livefeeds.setFocus(true)
+        return true
+      end if
+      if m.golferButton.isInFocusChain() then
+        if m.button.visible then
+          m.button.setFocus(true)
+          return true
+        end if
         m.livefeeds.setFocus(true)
         return true
       end if
@@ -369,6 +481,11 @@ function onKeyEvent(key, press) as boolean
       if m.settings.isInFocusChain() then
         m.settings.visible = false
         m.livefeeds.setFocus(true)
+        return true
+      end if
+      if m.golferManager.isInFocusChain() then
+        m.golferManager.visible = false
+        m.golferButton.setFocus(true)
         return true
       end if
     end if
